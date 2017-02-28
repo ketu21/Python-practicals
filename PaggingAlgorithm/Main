@@ -1,0 +1,139 @@
+
+class Paging_Algorithms:
+    page_fault = 0
+    number_frame = 0
+    temporary_frame = []
+    buffer_frame = []
+    page_list = []
+
+    def __init__(self,x,lt,algo):
+        """this function will initialize all the variables of the class and decide which algorithm is to be computed and
+        call that function"""
+        self.number_frame = x
+        self.page_list = lt
+        for a in range(0,x): #Initializes the temporary frame with all 0 to create a list of size of number of frames
+            self.temporary_frame.append(0)
+            self.buffer_frame.append(0)
+        #del self.buffer_frame[0]
+        #this part below is to identify the algorithm and make call to respective function
+        if algo == 'f':
+            self.fifo()
+        elif algo == 'l':
+            self.lru()
+        elif algo == 'o':
+            self.optimal()
+        else:
+            self.error()
+
+    def error(self):
+        """this function will handle letter error for the algorithm"""
+        #if the first letter of string is not as desired then this part will run.
+        #It will display error message and ask user to provide the input again.
+        #it will show the message to use particular letter for particular algorithm.
+        print("Can not determint the algorithm correctly!!!!!!")
+        print("USE f for FIFO, l for LRU and o for OPTIMAL.")
+        string_input = input("Enter the string:")
+        input_list = string_input.split(',')            #splits the input string on spaces
+        algo = input_list[0]
+        page_frame = int(input_list[1])
+        input_list.__delitem__(0)
+        input_list.__delitem__(0)
+        input_list = [int(a) for a in input_list]       #  process string elements in the list and make them integers
+        obj = Paging_Algorithms(page_frame,input_list,algo)
+
+    def fifo(self):
+        """this function implements the FIFO algorithm"""
+        pointer = 0 # pointer to point the next frame location
+        for x in range(0,len(self.page_list)): #loop from first to last page in the list
+            if self.page_list[x] not in self.temporary_frame:
+                #checks if the page is already in page frame or not. If it is already in frame
+                #then go to next page else add the page to the location pointed by the pointer
+                self.temporary_frame[pointer] = self.page_list[x] #replace te page at the pointed location
+                self.page_fault +=1 #increment the page fault after adding page to frame
+                print("\n",self.page_list[x]," : ",self.temporary_frame)
+                pointer += 1        #move pointer to next location
+                if pointer == self.number_frame: #if max frame location reached the set the pointer back to 0
+                    pointer = 0
+        print("\n Page Fault for FIFO is ",self.page_fault)
+
+    def lru(self):
+        print("LRU")
+        lru_list = []
+        true=0
+        #a list, of same size as frame, to keep record of most recent pages
+        for x in range(0,self.number_frame+1):  #initially the list contains nothing that is '0'
+            lru_list.append(0)
+        pointer = 0 # pointer to point the next frame location
+        for x in range(0,len(self.page_list)): #loop from first to last page in the list
+            if self.page_list[x] not in lru_list:   #check if the page is present in least recent used list or not
+                lru_list.append(self.page_list[x])  #if not then add to list
+            else:
+                for y in range(0,len(lru_list)):    # if page present in the recent used list then find the page location and remove
+                    #it and add it to the end as it is used recently
+                    if lru_list[y] == self.page_list[x]:
+                        del lru_list[y]
+                        lru_list.append(self.page_list[x])
+            if len(lru_list) > self.number_frame+1:
+                del lru_list[0]
+
+            if self.page_list[x] not in self.temporary_frame:
+                #checks if the page is already in page frame or not. If it is already in frame
+                #then go to next page else add the page
+                true = 0
+                for y in range(0,len(self.temporary_frame)):
+                    #find the least recent used page location and the replace that with the new entry
+                    if lru_list[0] == self.temporary_frame[y] and true == 0:
+                        self.temporary_frame[y] = self.page_list[x]
+                        self.page_fault += 1
+                        true=1
+            print("\n",self.page_list[x]," : ",self.temporary_frame)
+        print("\n Page Fault for LRU is ",self.page_fault)
+
+    def optimal(self):
+        print("OPTIMAL")
+        y = 0
+        pointer = 0 # pointer to point the next frame location
+        for x in range(0,self.number_frame):
+            self.buffer_frame[x] = self.page_list[x]
+            y +=1
+        for x in range(0,len(self.page_list)):
+            if self.page_list[x] not in self.temporary_frame:
+                if self.temporary_frame[pointer] in self.buffer_frame:
+                    for z in range(0,len(self.temporary_frame)):
+                        if self.temporary_frame[pointer] in self.buffer_frame:
+                            pointer +=1
+                            if pointer == self.number_frame:
+                                pointer = 0
+                if self.temporary_frame[pointer] not in self.buffer_frame:
+                    self.temporary_frame[pointer] = self.page_list[x]
+                    pointer += 1
+                    self.page_fault += 1
+                    if pointer == self.number_frame:
+                        pointer = 0
+                    del self.buffer_frame[0]
+                    if y < len(self.page_list):
+                        self.buffer_frame.append(self.page_list[y])
+                        y += 1
+                else:
+                    pointer += 1
+                    if pointer == self.number_frame:
+                        pointer = 0
+                    x -= 1
+            else:
+                del self.buffer_frame[0]
+                if y < len(self.page_list):
+                    self.buffer_frame.append(self.page_list[y])
+                y += 1
+            print("\n",self.page_list[x]," : ",self.temporary_frame,)
+        print("\nPage Fault for Optimal is ",self.page_fault)
+
+
+string_input = input()
+input_list = string_input.split(',') #splits the input string on spaces
+# process string elements in the list and make them integers
+algo = input_list[0]
+page_frame = int(input_list[1])
+input_list.__delitem__(0)
+input_list.__delitem__(0)
+input_list = [int(a) for a in input_list]
+obj = Paging_Algorithms(page_frame,input_list,algo)
